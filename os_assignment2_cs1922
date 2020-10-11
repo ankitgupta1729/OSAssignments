@@ -1,0 +1,319 @@
+----------------------------------------------------------------------Answer (1)------------------------------------------------------------- 
+(a) Each processor shows a number which shows the identification number. It means how many processor we have in the system and it displays all the information related to each CPU separately. I n my system, it shows processor 0, processor 1, processor 2, processor 3, processor 4. It means I have 4 CPUs. This info is also shown by 'lscpu' command.
+-- A CPU core is a CPU's processor. Here, each processor with processor id 0,1,2,3 has 2 cores means 2 cores per processor and each of which can work on a different task. 
+
+(b) 2
+(c) 4
+(d) Processor0 : 1375.061 MHz
+    Processor1 : 1049.101 MHz
+    Processor2 : 936.774  MHz
+    Processor3 : 954.663  MHz
+(e) MemTotal:        8088956 kB -- egrep  'Mem|Cache|Swap' /proc/meminfo
+(f) MemFree:         4219204 kB -- egrep  'Mem|Cache|Swap' /proc/meminfo
+(g) forked processes : 5208 -- vmstat -f and cat /proc/stat
+(h) ctxt : 21175465 -- awk '/ctxt/ ' /proc/stat
+
+
+----------------------------------------------------------------------Answer (2)------------------------------------------------------------- 
+
+(a) The pid of the process spawned by the shell to run the cpu-print executable is 4154 and the pid of the process which runs the ps command in new terminal window is 4168. 
+The ps command, short for Process Status, is a command line utility that is used to display or view information related to the processes running in a Linux system. PID shows the unique process ID. TTY shows the typeof terminal that the user is logged in to. TIME shows the time in minutes and seconds that the process has been running and CMD and the command that launched the process. To view all current processes execute, use ps -ax. Here, -a flag stands for all processes and -x will display all processes even those not associated with the current tty.
+
+(b) -- To know the PID of parent process :- ps -o ppid= -p 4154 ----> Output: 3207  
+    (or) echo $PPID ----> Output: 3207
+    (or) ps j 4154
+         output :
+         PPID   PID  PGID   SID TTY      TPGID STAT   UID   TIME COMMAND
+         3207  4154  4154  4154 pts/1     5191 Ss    1000   0:00 bash
+    -- To know the PIDs of all the ancestors, going back at least 5 generations (or until you reach the init process) :
+         pstree -sg 4154
+         output :
+         systemd(1)───systemd(1506)───gnome-terminal-(3207)───bash(4154)───pstree(5196)
+
+(c) First, we run the command :  ./cpu-print > /tmp/tmp.txt &. It shows output as "6942"  
+    Now, we Look at the proc file system information of the newly spawned process : cd /proc and do ls and go to directory "6942" and do ls
+    Now, to know where its file descriptors 0, 1, and 2 (standard input, output, and error) and pointing to,
+    we go to "fd" directory and do ls -l, it shows the output as :
+    total 0
+    lrwx------ 1 ankit ankit 64 Mar 15 12:17 0 -> /dev/pts/1
+    l-wx------ 1 ankit ankit 64 Mar 15 12:17 1 -> /tmp/tmp.txt
+    lrwx------ 1 ankit ankit 64 Mar 15 12:17 2 -> /dev/pts/1
+    This given output shows how I/O redirection is being implemented by the shell.
+
+(d) First, we run the command :  ./cpu-print | grep hello &. It shows output as "9451"  
+    Now, we Look at the proc file system information of the newly spawned process : cd /proc and do ls and go to directory "9451" and do ls
+    Now, to know where its file descriptors 0, 1, and 2 (standard input, output, and error) and pointing to,
+    we go to "fd" directory and do ls -l, it shows the output as :
+    total 0
+    lr-x------ 1 ankit ankit 64 Mar 15 13:38 0 -> 'pipe:[231794]'
+    lrwx------ 1 ankit ankit 64 Mar 15 13:38 1 -> /dev/pts/0
+    lrwx------ 1 ankit ankit 64 Mar 15 13:38 2 -> /dev/pts/0
+    This given output shows how how pipes are implemented by the shell.
+ 
+         
+----------------------------------------------------------------------Answer (3)------------------------------------------------------------- 
+
+
+For memory2.c :
+
+first we have run the file memory2.c and we get the PID of this process as 10147.
+Now, total size of the virtual memory of the process is and how much of this is actually physically resident in memory, we run the following command while compilation of the source file :
+
+ps -eo pid,tid,class,rtprio,stat,vsz,rss,comm  
+
+Output for PID 10147 will be :  
+
+10147 10147 TS       - S+     8296  3200 a.out
+
+It says :  total size of the virtual memory of the process : 8296 KB
+       and total size of this is actually physically resident in memory : 3200 KB
+
+Similarly,
+ 
+For memory1.c :
+
+first we have run the file memory1.c and we get the PID of this process as 10233.
+Now, total size of the virtual memory of the process is and how much of this is actually physically resident in memory, we run the following command while compilation of the source file :
+
+ps -eo pid,tid,class,rtprio,stat,vsz,rss,comm  
+
+Output for PID 10233 will be :  
+
+10233 10233 TS       - S+     8292   712 a.out
+
+It says :  total size of the virtual memory of the process : 8292 KB
+       and total size of this is actually physically resident in memory : 712 KB
+
+As, we can see in both cases, array is declared and initialized to zero but in memory2.c, it is allocated in physical memory because 10 is in each array cell. That's why it is taking more physical memory size.
+
+
+----------------------------------------------------------------------Answer (4)------------------------------------------------------------- 
+
+After storing the 5000 copy the foo.pdf with different names in disk-files directory using the script and then run the disk.c code which read these files and we observe the disk utilization means disk activity using various tools like dstat,iotop,iostat,top,atop etc.
+
+1) Using IOSTAT:
+   iostat can be used to report the disk read/write rates and counts for an interval continuously. It collects disk statistics, waits for the given amount of time, collects them again and displays the difference. Here is the output of the command iostat -y 5:
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          12.48    0.00   14.69    4.21    0.00   68.62
+
+Device             tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+loop0             0.00         0.00         0.00          0          0
+loop1             0.00         0.00         0.00          0          0
+loop2             0.00         0.00         0.00          0          0
+loop3             0.00         0.00         0.00          0          0
+loop4             0.00         0.00         0.00          0          0
+loop5             0.00         0.00         0.00          0          0
+loop6             0.00         0.00         0.00          0          0
+loop7             0.00         0.00         0.00          0          0
+sda              41.80      1256.00        21.60       6280        108
+loop8             0.00         0.00         0.00          0          0
+loop9             0.00         0.00         0.00          0          0
+loop10            0.00         0.00         0.00          0          0
+loop11            0.00         0.00         0.00          0          0
+loop12            0.00         0.00         0.00          0          0
+loop13            0.00         0.00         0.00          0          0
+loop14            0.00         0.00         0.00          0          0
+loop15            0.00         0.00         0.00          0          0
+loop16            0.00         0.00         0.00          0          0
+loop17            0.00         0.00         0.00          0          0
+loop18            0.00         0.00         0.00          0          0
+loop19            0.00         0.00         0.00          0          0
+loop20            0.00         0.00         0.00          0          0
+loop21            0.00         0.00         0.00          0          0
+loop22            0.00         0.00         0.00          0          0
+loop23            0.00         0.00         0.00          0          0
+loop24            0.00         0.00         0.00          0          0
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          12.97    0.00   14.32    0.25    0.00   72.46
+
+Device             tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+loop0             0.00         0.00         0.00          0          0
+loop1             0.00         0.00         0.00          0          0
+loop2             0.00         0.00         0.00          0          0
+loop3             0.00         0.00         0.00          0          0
+loop4             0.00         0.00         0.00          0          0
+loop5             0.00         0.00         0.00          0          0
+loop6             0.00         0.00         0.00          0          0
+loop7             0.00         0.00         0.00          0          0
+sda               0.40         0.00         7.20          0         36
+loop8             0.00         0.00         0.00          0          0
+loop9             0.00         0.00         0.00          0          0
+loop10            0.00         0.00         0.00          0          0
+loop11            0.00         0.00         0.00          0          0
+loop12            0.00         0.00         0.00          0          0
+loop13            0.00         0.00         0.00          0          0
+loop14            0.00         0.00         0.00          0          0
+loop15            0.00         0.00         0.00          0          0
+loop16            0.00         0.00         0.00          0          0
+loop17            0.00         0.00         0.00          0          0
+loop18            0.00         0.00         0.00          0          0
+loop19            0.00         0.00         0.00          0          0
+loop20            0.00         0.00         0.00          0          0
+loop21            0.00         0.00         0.00          0          0
+loop22            0.00         0.00         0.00          0          0
+loop23            0.00         0.00         0.00          0          0
+loop24            0.00         0.00         0.00          0          0
+
+Here, in each report, every 5 seconds, include the CPU stats and the disk stats. The CPU stats is a break up of where CPU time was spent during the interval. The disk stats includes the number of I/O requests per second (tps), the rate of read and write (kB_read/s and kB_write/s) and the amount of data read and written (kB_read and kB_wrtn).
+
+2) Using DSTAT:
+
+   dstat -cd --disk-util --disk-tps
+
+Terminal width too small, trimming output.
+ -dsk/total- -dsk/total->
+| read  writ|#read #writ>
+|3359k  244k|  63     5 >
+| 128k    0 |   1     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0    40k|   0     3 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0    36k|   0     9 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0    44k|   0     2 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >^C
+
+-- For disk1.c :
+
+1) Using IOSTAT:
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          16.15    0.00   12.76    0.20    0.00   70.89
+
+Device             tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+loop0             0.00         0.00         0.00          0          0
+loop1             0.00         0.00         0.00          0          0
+loop2             0.00         0.00         0.00          0          0
+loop3             0.00         0.00         0.00          0          0
+loop4             0.00         0.00         0.00          0          0
+loop5             0.00         0.00         0.00          0          0
+loop6             0.00         0.00         0.00          0          0
+loop7             0.00         0.00         0.00          0          0
+sda               7.20        27.20         5.60        136         28
+loop8             0.00         0.00         0.00          0          0
+loop9             0.00         0.00         0.00          0          0
+loop10            0.00         0.00         0.00          0          0
+loop11            0.00         0.00         0.00          0          0
+loop12            0.00         0.00         0.00          0          0
+loop13            0.00         0.00         0.00          0          0
+loop14            0.00         0.00         0.00          0          0
+loop15            0.00         0.00         0.00          0          0
+loop16            0.00         0.00         0.00          0          0
+loop17            0.00         0.00         0.00          0          0
+loop18            0.00         0.00         0.00          0          0
+loop19            0.00         0.00         0.00          0          0
+loop20            0.00         0.00         0.00          0          0
+loop21            0.00         0.00         0.00          0          0
+loop22            0.00         0.00         0.00          0          0
+loop23            0.00         0.00         0.00          0          0
+loop24            0.00         0.00         0.00          0          0
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          17.08    0.00   13.66    0.65    0.00   68.61
+
+Device             tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn
+loop0             0.00         0.00         0.00          0          0
+loop1             0.00         0.00         0.00          0          0
+loop2             0.00         0.00         0.00          0          0
+loop3             0.00         0.00         0.00          0          0
+loop4             0.00         0.00         0.00          0          0
+loop5             0.00         0.00         0.00          0          0
+loop6             0.00         0.00         0.00          0          0
+loop7             0.00         0.00         0.00          0          0
+sda              10.00       694.40         0.80       3472          4
+loop8             0.00         0.00         0.00          0          0
+loop9             0.00         0.00         0.00          0          0
+loop10            0.00         0.00         0.00          0          0
+loop11            0.00         0.00         0.00          0          0
+loop12            0.00         0.00         0.00          0          0
+loop13            0.00         0.00         0.00          0          0
+loop14            0.00         0.00         0.00          0          0
+loop15            0.00         0.00         0.00          0          0
+loop16            0.00         0.00         0.00          0          0
+loop17            0.00         0.00         0.00          0          0
+loop18            0.00         0.00         0.00          0          0
+loop19            0.00         0.00         0.00          0          0
+loop20            0.00         0.00         0.00          0          0
+loop21            0.00         0.00         0.00          0          0
+loop22            0.00         0.00         0.00          0          0
+loop23            0.00         0.00         0.00          0          0
+loop24            0.00         0.00         0.00          0          0
+
+
+2) Using DSTAT:
+
+Terminal width too small, trimming output.
+--total-cpu-usage-- -dsk/total- -dsk/total->
+| read  writ|#read #writ>
+|4829k  193k|  78     6 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0    28k|   0     2 >
+|   0    72k|   0    15 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0    52k|   0     4 >
+|   0     0 |   0     0 >
+|   0    56k|   0     7 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0    28k|   0     2 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0     0 |   0     0 >
+|   0    32k|   0     2 >
+|   0     0 |   0     0 >
+
+----------------------------------------------------------------------Answer (5)-------------------------------------------------------------
+  
+1) For cpu.c
+ 
+-- Bottleneck Resource : CPU
+
+-- Why ?
+            CPU Utilization : 100.0 %  (using command "top")
+            Memory Utilization : 0.0 % (using command "top")
+            Disk Utilization :  8.40 % (using command "iostat -x" )  
+
+2) For disk.c
+ 
+-- Bottleneck Resource : CPU
+
+-- Why ?
+            CPU Utilization : 21.5 %  (using command "top")
+            Memory Utilization : 0.0 % (using command "top")
+            Disk Utilization :  9.14 % (using command "iostat -x" )  
+
+3) For disk1.c
+ 
+-- Bottleneck Resource : CPU
+
+-- Why ?
+            CPU Utilization :  99.7 %  (using command "top")
+            Memory Utilization : 0.0 % (using command "top")
+            Disk Utilization :  9.01 % (using command "iostat -x" )    
+  
